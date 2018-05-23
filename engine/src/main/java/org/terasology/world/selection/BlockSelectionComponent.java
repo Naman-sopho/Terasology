@@ -19,6 +19,8 @@ import org.terasology.entitySystem.Component;
 import org.terasology.math.Region3i;
 import org.terasology.math.geom.Vector3i;
 import org.terasology.module.sandbox.API;
+import org.terasology.network.FieldReplicateType;
+import org.terasology.network.Replicate;
 import org.terasology.rendering.assets.texture.Texture;
 
 /**
@@ -36,6 +38,7 @@ public class BlockSelectionComponent implements Component {
     /**
      * Starting point for the block selection.   Used to re-create the currentSelection region when the ending point is changed.
      */
+    @Replicate(FieldReplicateType.SERVER_TO_CLIENT)
     public Vector3i startPosition;
 
     /**
@@ -43,15 +46,19 @@ public class BlockSelectionComponent implements Component {
      * when the starting point is set, then represents the region between the starting
      * and ending points after the ending point is set.
      */
+    @Replicate(FieldReplicateType.SERVER_TO_CLIENT)
     public Region3i currentSelection;
 
     /**
      * If true, block selection will be drawn
      */
+    @Replicate(FieldReplicateType.SERVER_TO_CLIENT)
     public boolean shouldRender;
 
     /**
      * Texture used to indicate the selected blocks when drawing block selection.  Defaults to "engine:selection" if not specified.
      */
+    @Replicate(FieldReplicateType.SERVER_TO_CLIENT)
+
     public Texture texture;
 }

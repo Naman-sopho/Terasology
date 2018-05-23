@@ -15,15 +15,22 @@
  */
 package org.terasology.world.selection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.terasology.entitySystem.entity.EntityRef;
 import org.terasology.entitySystem.event.ReceiveEvent;
 import org.terasology.entitySystem.systems.BaseComponentSystem;
 import org.terasology.entitySystem.systems.RegisterMode;
 import org.terasology.entitySystem.systems.RegisterSystem;
 import org.terasology.logic.location.LocationComponent;
+import org.terasology.logic.selection.LocalPlayerBlockSelectionByItemSystem;
+import org.terasology.logic.selection.RemoveRenderEvent;
+import org.terasology.logic.selection.StartRenderEvent;
 import org.terasology.math.Region3i;
 import org.terasology.math.geom.Vector3f;
 import org.terasology.math.geom.Vector3i;
+import org.terasology.network.NetworkComponent;
+import org.terasology.protobuf.EntityData;
 import org.terasology.world.selection.event.SetBlockSelectionEndingPointEvent;
 import org.terasology.world.selection.event.SetBlockSelectionStartingPointEvent;
 
@@ -55,6 +62,13 @@ public class BlockSelectionSystem extends BaseComponentSystem {
         blockSelectionComponent.startPosition = startPosition;
         Vector3i endPosition = startPosition;
         blockSelectionComponent.currentSelection = Region3i.createBounded(startPosition, endPosition);
+
+        NetworkComponent networkComponent = event.getBlockSelectionComponentEntity().getComponent(NetworkComponent.class);
+        networkComponent.replicateMode = NetworkComponent.ReplicateMode.ALWAYS;
+        event.getBlockSelectionComponentEntity().saveComponent(networkComponent);
+        event.getBlockSelectionComponentEntity().saveComponent(blockSelectionComponent);
+        Logger logger = LoggerFactory.getLogger(BlockSelectionSystem.class);
+        logger.info("Authority set start point to : " + blockSelectionComponent.startPosition);
     }
 
     @ReceiveEvent(components = {LocationComponent.class})
@@ -80,5 +94,24 @@ public class BlockSelectionSystem extends BaseComponentSystem {
             startPosition = endPosition;
         }
         blockSelectionComponent.currentSelection = Region3i.createBounded(startPosition, endPosition);
+
+        event.getBlockSelectionComponentEntity().saveComponent(blockSelectionComponent);
+    }
+
+    @ReceiveEvent
+    public void removeRenderingOfBlocks(RemoveRenderEvent event, EntityRef blockSelectionEntity) {
+        BlockSelectionComponent blockSelectionComponent = blockSelectionEntity.getComponent(BlockSelectionComponent.class);
+        blockSelectionComponent.shouldRender = false;
+        blockSelectionComponent.currentSelection = null;
+        blockSelectionComponent.startPosition = null;
+
+        blockSelectionEntity.saveComponent(blockSelectionComponent);
+    }
+
+    @ReceiveEvent
+    public void startRenderOfBlocks(StartRenderEvent event, EntityRef blockSelectionEntity) {
+        BlockSelectionComponent blockSelectionComponent = blockSelectionEntity.getComponent(BlockSelectionComponent.class);
+        blockSelectionComponent.shouldRender = true;
+        blockSelectionEntity.saveComponent(blockSelectionComponent);
     }
 }

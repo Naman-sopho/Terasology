@@ -15,6 +15,9 @@
  */
 package org.terasology.logic.selection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.terasology.entitySystem.entity.EntityManager;
 import org.terasology.entitySystem.entity.EntityRef;
 import org.terasology.entitySystem.event.ReceiveEvent;
 import org.terasology.entitySystem.systems.BaseComponentSystem;
@@ -40,6 +43,9 @@ public class LocalPlayerBlockSelectionByItemSystem extends BaseComponentSystem {
     @In
     private LocalPlayer localPlayer;
 
+    @In
+    EntityManager entityManager;
+
     private EntityRef blockSelectionComponentEntity;
 
     @ReceiveEvent(components = {OnItemActivateSelectionComponent.class})
@@ -51,21 +57,21 @@ public class LocalPlayerBlockSelectionByItemSystem extends BaseComponentSystem {
         EntityRef targetLocationEntity = event.getTarget();
 
         this.blockSelectionComponentEntity = itemEntity;
-        BlockSelectionComponent blockSelectionComponent = itemEntity.getComponent(BlockSelectionComponent.class);
+        BlockSelectionComponent blockSelectionComponent = blockSelectionComponentEntity.getComponent(BlockSelectionComponent.class);
 
         if (null == blockSelectionComponent.startPosition) {
             // on the first item click, we start selecting blocks
-            targetLocationEntity.send(new SetBlockSelectionStartingPointEvent(itemEntity));
-
-            blockSelectionComponent.shouldRender = true;
+            targetLocationEntity.send(new SetBlockSelectionStartingPointEvent(blockSelectionComponentEntity));
+            blockSelectionComponentEntity.send(new StartRenderEvent());
+            Logger logger = LoggerFactory.getLogger(LocalPlayerBlockSelectionByItemSystem.class);
+            logger.info("Client has start position : " + blockSelectionComponent.startPosition);
         } else {
             // on the second item click, we will set the ending selection point and send an ApplyBlockSelectionEvent
             targetLocationEntity.send(new SetBlockSelectionEndingPointEvent(itemEntity));
 
             localPlayer.getCharacterEntity().send(new ApplyBlockSelectionEvent(itemEntity, blockSelectionComponent.currentSelection));
-            blockSelectionComponent.shouldRender = false;
-            blockSelectionComponent.currentSelection = null;
-            blockSelectionComponent.startPosition = null;
+
+            blockSelectionComponentEntity.send(new RemoveRenderEvent());
         }
     }
 

@@ -33,4 +33,8 @@ public class SetBlockSelectionStartingPointEvent extends AbstractConsumableEvent
     public BlockSelectionComponent getBlockSelectionComponent() {
         return blockSelectionComponentEntity.getComponent(BlockSelectionComponent.class);
     }
+
+    public EntityRef getBlockSelectionComponentEntity() {
+        return blockSelectionComponentEntity;
+    }
 }

@@ -34,4 +34,7 @@ public class SetBlockSelectionEndingPointEvent extends AbstractConsumableEvent {
         return blockSelectionComponentEntity.getComponent(BlockSelectionComponent.class);
     }
 
+    public EntityRef getBlockSelectionComponentEntity() {
+        return blockSelectionComponentEntity;
+    }
 }
